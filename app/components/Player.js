@@ -12,16 +12,39 @@ import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 
+const statusMap = {
+    PLAYING: MusicControl.STATE_PLAYING,
+    PAUSED: MusicControl.STATE_PAUSED,
+    BUFFERING: MusicControl.STATE_BUFFERING
+};
+
+const defaultState = {
+    status: 'STOPPED',
+    nowPlaying: '',
+    duration: 0,
+    currTime: 0
+};
+
+
 export default class Player extends React.Component {
-    state = {
-        status: 'STOPPED',
-        nowPlaying: '',
-        duration: 0,
-        currTime: 0
-    };
+    state = defaultState;
 
     componentDidMount() {
         this.subscription = DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this))
+        MusicControl.enableControl('play', true);
+        MusicControl.enableControl('pause', true);
+        MusicControl.enableBackgroundMode(true);
+        MusicControl.enableControl('closeNotification', true, {when: 'always'});
+        MusicControl.on('play', ()=> {
+            RNAudioStreamer.play();
+        });
+        MusicControl.on('pause', ()=> {
+            RNAudioStreamer.pause();
+        });
+        MusicControl.on('closeNotification', ()=> {
+            RNAudioStreamer.setUrl('');
+            this.setState(defaultState);
+        });
     }
 
     _audioStatus(status) {
@@ -33,18 +56,26 @@ export default class Player extends React.Component {
                 this.setState({duration});
             })
         }
+        MusicControl.updatePlayback({
+            state: statusMap[status]
+        });
     }
 
     playSegment(segment) {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
+        this.segment = segment;
         RNAudioStreamer.setUrl(segment.url);
         this.setState({
             nowPlaying: segment.title,
             currTime: 0
         });
         RNAudioStreamer.play();
+        MusicControl.setNowPlaying({
+            title: segment.title,
+            artwork: segment.image,
+        });
         this.timeInterval = setInterval(() => {
             RNAudioStreamer.currentTime((err, currentTime) => {
                 if (err) {
@@ -67,14 +98,12 @@ export default class Player extends React.Component {
     }
 
     _seekingComplete(value) {
-        console.log(value);
         this.seeking = false;
         RNAudioStreamer.seekToTime(value);
     }
 
     _seek(value) {
         value = Math.floor(value);
-        console.log(value);
         this.seeking = true;
         this.setState({currTime: value});
     }

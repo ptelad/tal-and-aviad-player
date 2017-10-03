@@ -11,7 +11,8 @@ export default class ItemCard extends React.Component {
     _onPress() {
         this.props.onPress && this.props.onPress({
             title: this.props.title,
-            url: this.props.url
+            url: this.props.url,
+            image: this.props.image
         })
     }
 

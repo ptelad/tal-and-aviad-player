@@ -2,7 +2,6 @@ import React from 'react';
 import {
     AppRegistry,
     StyleSheet,
-    Text,
     View,
     ActivityIndicator,
     FlatList
@@ -10,7 +9,6 @@ import {
 import { parseString } from 'react-native-xml2js';
 import ItemCard from './components/ItemCard';
 import Player from './components/Player';
-import RNAudioStreamer from 'react-native-audio-streamer';
 
 export default class TalAndAviad extends React.Component {
     state = {
@@ -69,6 +67,7 @@ export default class TalAndAviad extends React.Component {
                 <FlatList
                     syle={styles.list}
                     data={this.state.data}
+                    contentContainerStyle={{paddingBottom: 100}}
                     renderItem={this._renderItem.bind(this)}
                 />
                 <Player ref={this._playerRef.bind(this)}/>
