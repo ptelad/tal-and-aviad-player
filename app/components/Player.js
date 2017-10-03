@@ -32,7 +32,8 @@ export default class Player extends React.Component {
     state = defaultState;
 
     componentDidMount() {
-        this.subscription = DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this))
+        this.subscription = DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this));
+        DeviceEventEmitter.addListener('WiredHeadset', this._headphonePlugged.bind(this));
         MusicControl.enableControl('play', true);
         MusicControl.enableControl('pause', true);
         MusicControl.enableBackgroundMode(true);
@@ -47,6 +48,12 @@ export default class Player extends React.Component {
             RNAudioStreamer.setUrl('');
             this.setState(defaultState);
         });
+    }
+
+    _headphonePlugged(data) {
+        if (this.state.status === 'PLAYING' && !data.isPlugged) {
+            RNAudioStreamer.pause();
+        }
     }
 
     _audioStatus(status) {

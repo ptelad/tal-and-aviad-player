@@ -3,16 +3,17 @@ package com.talandaviad;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.oblador.vectoricons.VectorIconsPackage;
-import com.tanguyantoine.react.MusicControl;
-import fm.indiecast.rnaudiostreamer.RNAudioStreamerPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
+import com.oblador.vectoricons.VectorIconsPackage;
+import com.tanguyantoine.react.MusicControl;
 
 import java.util.Arrays;
 import java.util.List;
+
+import fm.indiecast.rnaudiostreamer.RNAudioStreamerPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -28,7 +29,8 @@ public class MainApplication extends Application implements ReactApplication {
           new MainReactPackage(),
             new VectorIconsPackage(),
             new MusicControl(),
-            new RNAudioStreamerPackage()
+            new RNAudioStreamerPackage(),
+            new MyPackages()
       );
     }
   };
