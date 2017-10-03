@@ -2,25 +2,112 @@ import React from 'react';
 import {
     StyleSheet,
     View,
-    Image,
+    Slider,
     Text,
-    TouchableOpacity
+    TouchableOpacity,
+    DeviceEventEmitter,
+    ActivityIndicator
 } from 'react-native';
 import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
+import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 
 export default class Player extends React.Component {
+    state = {
+        status: 'STOPPED',
+        nowPlaying: '',
+        duration: 0,
+        currTime: 0
+    };
+
+    componentDidMount() {
+        this.subscription = DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this))
+    }
+
+    _audioStatus(status) {
+        console.log(status);
+        this.setState({status});
+        if (status === 'PLAYING') {
+            RNAudioStreamer.duration((err, duration) => {
+                console.log(duration);
+                this.setState({duration});
+            })
+        }
+    }
+
+    playSegment(segment) {
+        if (this.timeInterval) {
+            clearInterval(this.timeInterval);
+        }
+        RNAudioStreamer.setUrl(segment.url);
+        this.setState({
+            nowPlaying: segment.title,
+            currTime: 0
+        });
+        RNAudioStreamer.play();
+        this.timeInterval = setInterval(() => {
+            RNAudioStreamer.currentTime((err, currentTime) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    if (!this.seeking) {
+                        this.setState({currTime: currentTime});
+                    }
+                }
+            })
+        }, 1000);
+    }
+
+    _playPausePressed() {
+        if (this.state.status === 'PLAYING') {
+            RNAudioStreamer.pause();
+        } else if (this.state.status === 'PAUSED') {
+            RNAudioStreamer.play();
+        }
+    }
+
+    _seekingComplete(value) {
+        console.log(value);
+        this.seeking = false;
+        RNAudioStreamer.seekToTime(value);
+    }
+
+    _seek(value) {
+        value = Math.floor(value);
+        console.log(value);
+        this.seeking = true;
+        this.setState({currTime: value});
+    }
+
     render() {
-        let icon = <Icon name="play" size={16} color="white"/>
+        let icon = null;
+        if (this.state.status === 'PLAYING') {
+            icon = <Icon name="pause" size={30} color="black"/>;
+        } else if (this.state.status === 'PAUSED') {
+            icon = <Icon name="play" size={30} color="black"/>;
+        } else if (this.state.status === 'BUFFERING') {
+            icon = <ActivityIndicator/>
+        }
 
         return (
-            <View style={styles.container} pointerEvents='box-none'>
-                <View style={styles.infoBox}>
-                </View>
-                <TouchableOpacity style={styles.playButton} onPress={() => {}}>
+            <View style={styles.container}>
+                <TouchableOpacity style={styles.playButton} onPress={this._playPausePressed.bind(this)}>
                     {icon}
                 </TouchableOpacity>
+                <View style={styles.infoBox}>
+                    <Text>{this.state.nowPlaying}</Text>
+                    <View style={styles.slider}>
+                        <Text>{secondsToTime(this.state.currTime)}</Text>
+                        <Slider
+                            style={{flex: 1}}
+                            value={this.state.currentTime}
+                            maximumValue={this.state.duration}
+                            onSlidingComplete={this._seekingComplete.bind(this)}
+                            onValueChange={this._seek.bind(this)}
+                        />
+                        <Text>{secondsToTime(this.state.duration)}</Text>
+                    </View>
+                </View>
             </View>
         )
     }
@@ -29,28 +116,40 @@ export default class Player extends React.Component {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        height: 150,
+        height: 100,
         bottom: 0,
         right: 0,
         left: 0,
-        backgroundColor: 'transparent',
-        justifyContent: 'flex-end'
+        elevation: 10,
+        backgroundColor: 'white',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
     },
     infoBox: {
-        height: 80,
-        elevation: 10,        
-        backgroundColor: 'white'        
+        flex: 1,
+        backgroundColor: 'white'
     },
     playButton: {
-        position: 'absolute',
-        top: 35,
-        left: 20,
-        height: 70,
-        width: 70,
-        elevation: 15,        
-        backgroundColor: '#E91E63',
+        height: 50,
+        width: 50,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 45
+    },
+    slider: {
+        width: '100%',
+        marginVertical: 10,
+        flexDirection: 'row',
+        alignItems: 'center'
     }
 });
+
+function secondsToTime(seconds) {
+    let minutes = Math.floor(seconds / 60);
+    minutes = ('0' + minutes).slice(-2);
+    seconds = seconds % 60;
+    seconds = ('0' + seconds).slice(-2);
+
+    return `${minutes}:${seconds}`;
+}

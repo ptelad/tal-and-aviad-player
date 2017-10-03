@@ -6,14 +6,20 @@ import {
     Text,
     TouchableNativeFeedback
 } from 'react-native';
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
 
 export default class ItemCard extends React.Component {
+    _onPress() {
+        this.props.onPress && this.props.onPress({
+            title: this.props.title,
+            url: this.props.url
+        })
+    }
+
     render() {
         return (
             <View style={styles.container}>
                 <Image style={styles.image} source={{uri: this.props.image}}/>
-                <TouchableNativeFeedback style={{flex: 1}} onPress={() => this.props.onPress(this.props.url)}>
+                <TouchableNativeFeedback style={{flex: 1}} onPress={this._onPress.bind(this)}>
                     <View style={styles.textContainer}>
                         <Text style={styles.text}>{this.props.title}</Text>
                     </View>

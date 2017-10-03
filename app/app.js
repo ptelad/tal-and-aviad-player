@@ -45,10 +45,14 @@ export default class TalAndAviad extends React.Component {
         />
     }
 
-    _playItem(url) {
-        console.log('will play: ', url);
-        RNAudioStreamer.setUrl(url);
-        RNAudioStreamer.play();
+    _playItem(segment) {
+        this.player && this.player.playSegment(segment);
+    }
+
+    _playerRef(p) {
+        if (p) {
+            this.player = p;
+        }
     }
 
     render() {
@@ -67,7 +71,7 @@ export default class TalAndAviad extends React.Component {
                     data={this.state.data}
                     renderItem={this._renderItem.bind(this)}
                 />
-                <Player/>
+                <Player ref={this._playerRef.bind(this)}/>
             </View>
         );
     }
