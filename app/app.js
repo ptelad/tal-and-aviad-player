@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { parseString } from 'react-native-xml2js';
 import ItemCard from './components/ItemCard';
+import Player from './components/Player';
 import RNAudioStreamer from 'react-native-audio-streamer';
 
 export default class TalAndAviad extends React.Component {
@@ -66,6 +67,7 @@ export default class TalAndAviad extends React.Component {
                     data={this.state.data}
                     renderItem={this._renderItem.bind(this)}
                 />
+                <Player/>
             </View>
         );
     }

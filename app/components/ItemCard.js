@@ -15,7 +15,6 @@ export default class ItemCard extends React.Component {
                 <Image style={styles.image} source={{uri: this.props.image}}/>
                 <TouchableNativeFeedback style={{flex: 1}} onPress={() => this.props.onPress(this.props.url)}>
                     <View style={styles.textContainer}>
-                        <Icon name="music" size={16} color="black"/>
                         <Text style={styles.text}>{this.props.title}</Text>
                     </View>
                 </TouchableNativeFeedback>
@@ -30,7 +29,7 @@ const styles = StyleSheet.create({
         margin: 20,
         // borderWidth: 1,
         borderRadius: 2,
-        elevation: 10,
+        elevation: 5,
         backgroundColor: 'white'
     },
     image: {
