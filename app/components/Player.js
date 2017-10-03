@@ -25,6 +25,8 @@ const defaultState = {
     currTime: 0
 };
 
+const PINK = '#E91E63';
+
 
 export default class Player extends React.Component {
     state = defaultState;
@@ -65,7 +67,6 @@ export default class Player extends React.Component {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
-        this.segment = segment;
         RNAudioStreamer.setUrl(segment.url);
         this.setState({
             nowPlaying: segment.title,
@@ -75,6 +76,7 @@ export default class Player extends React.Component {
         MusicControl.setNowPlaying({
             title: segment.title,
             artwork: segment.image,
+            color: 0xE91E63
         });
         this.timeInterval = setInterval(() => {
             RNAudioStreamer.currentTime((err, currentTime) => {
@@ -111,20 +113,20 @@ export default class Player extends React.Component {
     render() {
         let icon = null;
         if (this.state.status === 'PLAYING') {
-            icon = <Icon name="pause" size={30} color="black"/>;
+            icon = <Icon name="pause" size={30} color={PINK}/>;
         } else if (this.state.status === 'PAUSED') {
-            icon = <Icon name="play" size={30} color="black"/>;
+            icon = <Icon name="play" size={30} color={PINK}/>;
         } else if (this.state.status === 'BUFFERING') {
-            icon = <ActivityIndicator/>
+            icon = <ActivityIndicator color={PINK}/>
         }
 
         return (
             <View style={styles.container}>
-                <TouchableOpacity style={styles.playButton} onPress={this._playPausePressed.bind(this)}>
-                    {icon}
-                </TouchableOpacity>
-                <View style={styles.infoBox}>
-                    <Text>{this.state.nowPlaying}</Text>
+                <Text style={styles.title} lineNumber={1}>{this.state.nowPlaying}</Text>
+                <View style={styles.playBox}>
+                    <TouchableOpacity style={styles.playButton} onPress={this._playPausePressed.bind(this)}>
+                        {icon}
+                    </TouchableOpacity>
                     <View style={styles.slider}>
                         <Text>{secondsToTime(this.state.currTime)}</Text>
                         <Slider
@@ -133,6 +135,9 @@ export default class Player extends React.Component {
                             maximumValue={this.state.duration}
                             onSlidingComplete={this._seekingComplete.bind(this)}
                             onValueChange={this._seek.bind(this)}
+                            minimumTrackTintColor={PINK}
+                            maximumTrackTintColor={PINK}
+                            thumbTintColor={PINK}
                         />
                         <Text>{secondsToTime(this.state.duration)}</Text>
                     </View>
@@ -144,30 +149,35 @@ export default class Player extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
-        position: 'absolute',
+        // position: 'absolute',
         height: 100,
-        bottom: 0,
-        right: 0,
-        left: 0,
+        // bottom: 0,
+        // right: 0,
+        // left: 0,
         elevation: 10,
         backgroundColor: 'white',
-        flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        justifyContent: 'center',
+        paddingHorizontal: 10,
         paddingVertical: 10,
     },
-    infoBox: {
-        flex: 1,
-        backgroundColor: 'white'
+    title: {
+        flex: 1
+    },
+    playBox: {
+        height: 50,
+        backgroundColor: 'white',
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     playButton: {
         height: 50,
         width: 50,
         justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'center'
     },
     slider: {
-        width: '100%',
+        flex: 1,
         marginVertical: 10,
         flexDirection: 'row',
         alignItems: 'center'

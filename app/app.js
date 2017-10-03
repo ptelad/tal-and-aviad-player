@@ -14,10 +14,15 @@ export default class TalAndAviad extends React.Component {
     state = {
         dataLoaded: false,
         data: null,
-        url: ''
+        refresh: false
     };
 
-    async componentDidMount() {
+    componentDidMount() {
+        this._fetchData();
+    }
+
+    async _fetchData() {
+        this.setState({refresh: true});
         let response = await fetch('http://eco99fm.maariv.co.il/onair/talAndAviadXml.aspx');
         let xml = await response.text();
         parseString(xml, (err, result) => {
@@ -27,15 +32,15 @@ export default class TalAndAviad extends React.Component {
                 console.log(result.Segments.Segment);
                 this.setState({
                     dataLoaded: true,
+                    refresh: false,
                     data: result.Segments.Segment
                 })
             }
-        })
+        });
     }
 
     _renderItem({item, index}) {
         return <ItemCard
-            key={index}
             image={item.RecordedProgramsImg[0]}
             title={item.RecordedProgramsName[0]}
             url={item.RecordedProgramsDownloadFile[0]}
@@ -56,19 +61,22 @@ export default class TalAndAviad extends React.Component {
     render() {
         if (!this.state.dataLoaded) {
             return (
-                <View style={styles.container}>
-                    <ActivityIndicator/>
+                <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                    <ActivityIndicator size="large" color="#E91E63"/>
                 </View>
-            )
+            );
         }
+
 
         return (
             <View style={styles.container}>
                 <FlatList
                     syle={styles.list}
                     data={this.state.data}
-                    contentContainerStyle={{paddingBottom: 100}}
+                    keyExtractor={item => item.Pid[0]}
                     renderItem={this._renderItem.bind(this)}
+                    refreshing={this.state.refresh}
+                    onRefresh={this._fetchData.bind(this)}
                 />
                 <Player ref={this._playerRef.bind(this)}/>
             </View>
