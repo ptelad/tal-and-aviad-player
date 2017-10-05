@@ -6,11 +6,13 @@ import {
     Text,
     TouchableOpacity,
     DeviceEventEmitter,
-    ActivityIndicator
+    ActivityIndicator,
+    AsyncStorage
 } from 'react-native';
 import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
+import RNExitApp from 'react-native-exit-app';
 
 const statusMap = {
     PLAYING: MusicControl.STATE_PLAYING,
@@ -44,10 +46,32 @@ export default class Player extends React.Component {
         MusicControl.on('pause', ()=> {
             RNAudioStreamer.pause();
         });
-        MusicControl.on('closeNotification', ()=> {
+        MusicControl.on('closeNotification', async ()=> {
             RNAudioStreamer.setUrl('');
-            this.setState(defaultState);
+            await this._saveStateAndExit();
         });
+        this._checkSavedStateAndLoad();
+    }
+
+    async _saveStateAndExit() {
+        await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
+        RNExitApp.exitApp();
+    }
+
+    async _checkSavedStateAndLoad() {
+        let savedSegemnt = await AsyncStorage.getItem('saved');
+        if (savedSegemnt) {
+            savedSegemnt = JSON.parse(savedSegemnt);
+            console.log('found saved state!!! ', savedSegemnt);
+            this.playSegment(savedSegemnt);
+            RNAudioStreamer.pause();
+            let currTime = Math.max(0, savedSegemnt.currTime - 5);
+            RNAudioStreamer.seekToTime(currTime);
+            this.setState({
+                currTime: currTime,
+                duration: savedSegemnt.duration
+            });
+        }
     }
 
     _headphonePlugged(data) {
@@ -63,6 +87,7 @@ export default class Player extends React.Component {
             RNAudioStreamer.duration((err, duration) => {
                 console.log(duration);
                 this.setState({duration});
+                this.segment.duration = duration;
             })
         }
         MusicControl.updatePlayback({
@@ -74,6 +99,7 @@ export default class Player extends React.Component {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
+        this.segment = segment;
         RNAudioStreamer.setUrl(segment.url);
         this.setState({
             nowPlaying: segment.title,
@@ -90,6 +116,7 @@ export default class Player extends React.Component {
                 if (err) {
                     console.log(err);
                 } else {
+                    this.segment.currTime = currentTime;
                     if (!this.seeking) {
                         this.setState({currTime: currentTime});
                     }
@@ -138,7 +165,7 @@ export default class Player extends React.Component {
                         <Text>{secondsToTime(this.state.currTime)}</Text>
                         <Slider
                             style={{flex: 1}}
-                            value={this.state.currentTime}
+                            value={this.state.currTime}
                             maximumValue={this.state.duration}
                             onSlidingComplete={this._seekingComplete.bind(this)}
                             onValueChange={this._seek.bind(this)}

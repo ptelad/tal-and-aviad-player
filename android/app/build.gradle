@@ -135,6 +135,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-exit-app')
     compile project(':react-native-vector-icons')
     compile project(':react-native-music-control')
     compile project(':react-native-audio-streamer')
