@@ -7,7 +7,9 @@ import {
     TouchableOpacity,
     DeviceEventEmitter,
     ActivityIndicator,
-    AsyncStorage
+    AsyncStorage,
+    BackHandler,
+    Alert
 } from 'react-native';
 import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
@@ -33,9 +35,14 @@ const PINK = '#E91E63';
 export default class Player extends React.Component {
     state = defaultState;
 
+    constructor(props) {
+        super(props);
+    }
+
     componentDidMount() {
-        this.subscription = DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this));
+        DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this));
         DeviceEventEmitter.addListener('WiredHeadset', this._headphonePlugged.bind(this));
+        BackHandler.addEventListener('hardwareBackPress', this._backPressed.bind(this));
         MusicControl.enableControl('play', true);
         MusicControl.enableControl('pause', true);
         MusicControl.enableBackgroundMode(true);
@@ -47,15 +54,41 @@ export default class Player extends React.Component {
             RNAudioStreamer.pause();
         });
         MusicControl.on('closeNotification', async ()=> {
-            RNAudioStreamer.setUrl('');
             await this._saveStateAndExit();
         });
         this._checkSavedStateAndLoad();
     }
 
+    componentWillUnmount() {
+        if (this.timeInterval) {
+            clearInterval(this.timeInterval);
+        }
+    }
+
     async _saveStateAndExit() {
+        RNAudioStreamer.setUrl('');
         await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
+        MusicControl.resetNowPlaying();
         RNExitApp.exitApp();
+    }
+
+    _backPressed() {
+        if (this.state.status === 'PLAYING') {
+            Alert.alert(
+                'בטוח לצאת?',
+                'יציאה תפסיק את הנגינה',
+                [
+                    {text: 'בטל', onPress: () => {}},
+                    {text: 'צא', onPress: () => {
+                        this._saveStateAndExit();
+                    }}
+                ]
+            );
+        } else {
+            this._saveStateAndExit();
+        }
+
+        return true;
     }
 
     async _checkSavedStateAndLoad() {
