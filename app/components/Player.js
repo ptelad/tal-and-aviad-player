@@ -189,6 +189,7 @@ export default class Player extends React.Component {
             this.playSegment(this.savedSagment, false);
             RNAudioStreamer.seekToTime(this.savedSagment.currTime);
             RNAudioStreamer.play();
+            this.savedSagment = null;
         }
     }
 
