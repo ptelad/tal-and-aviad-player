@@ -268,9 +268,16 @@ const styles = StyleSheet.create({
 
 function secondsToTime(seconds) {
     let minutes = Math.floor(seconds / 60);
-    minutes = ('0' + minutes).slice(-2);
+    let minutesStr = ('0' + minutes).slice(-2);
     seconds = seconds % 60;
-    seconds = ('0' + seconds).slice(-2);
+    let secondsStr = ('0' + seconds).slice(-2);
 
-    return `${minutes}:${seconds}`;
+    if (minutes / 60 > 1) {
+        let hours = Math.floor(minutes / 60);
+        minutes = minutes % 60;
+        minutesStr = ('0' + minutes).slice(-2);
+        return `${hours}:${minutesStr}:${secondsStr}`;
+    }
+
+    return `${minutesStr}:${secondsStr}`;
 }
