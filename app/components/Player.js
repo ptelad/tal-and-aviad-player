@@ -120,8 +120,10 @@ export default class Player extends React.Component {
         console.log('_audioFocusChanged: ', data);
         if (this.state.status === 'PLAYING' && !data.inFocus) {
             RNAudioStreamer.pause();
-        } else if (this.state.status === 'PAUSED' && data.inFocus) {
+            this.pausedFromFocusLoss = true;
+        } else if (this.state.status === 'PAUSED' && data.inFocus && this.pausedFromFocusLoss) {
             RNAudioStreamer.play();
+            this.pausedFromFocusLoss = false;
         }
     }
 
@@ -194,7 +196,7 @@ export default class Player extends React.Component {
         let icon = null;
         if (this.state.status === 'PLAYING') {
             icon = <Icon name="pause" size={30} color={PINK}/>;
-        } else if (this.state.status === 'PAUSED') {
+        } else if (this.state.status === 'PAUSED' || this.state.status === "STANDBY") {
             icon = <Icon name="play" size={30} color={PINK}/>;
         } else if (this.state.status === 'BUFFERING') {
             icon = <ActivityIndicator color={PINK}/>
