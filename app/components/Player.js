@@ -69,9 +69,11 @@ export default class Player extends React.Component {
     }
 
     async _saveStateAndExit() {
-        RNAudioStreamer.setUrl('');
-        await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
-        MusicControl.resetNowPlaying();
+        if (this.segment) {
+            RNAudioStreamer.setUrl('');
+            await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
+            MusicControl.resetNowPlaying();
+        }
         RNExitApp.exitApp();
     }
 
@@ -99,12 +101,15 @@ export default class Player extends React.Component {
         if (savedSegemnt) {
             savedSegemnt = JSON.parse(savedSegemnt);
             console.log('found saved state!!! ', savedSegemnt);
-            this.playSegment(savedSegemnt);
-            RNAudioStreamer.pause();
-            let currTime = Math.max(0, savedSegemnt.currTime - 5);
-            RNAudioStreamer.seekToTime(currTime);
+            // this.playSegment(savedSegemnt);
+            // RNAudioStreamer.pause();
+            savedSegemnt.currTime = Math.max(0, savedSegemnt.currTime - 5);
+            // RNAudioStreamer.seekToTime(currTime);
+            this.savedSagment = savedSegemnt;
             this.setState({
-                currTime: currTime,
+                status: 'STANDBY',
+                nowPlaying: savedSegemnt.title,
+                currTime: savedSegemnt.currTime,
                 duration: savedSegemnt.duration
             });
         }
@@ -142,17 +147,19 @@ export default class Player extends React.Component {
         });
     }
 
-    playSegment(segment) {
+    playSegment(segment, play = true) {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
         this.segment = segment;
         RNAudioStreamer.setUrl(segment.url);
-        this.setState({
-            nowPlaying: segment.title,
-            currTime: 0
-        });
-        RNAudioStreamer.play();
+        if (play) {
+            this.setState({
+                nowPlaying: segment.title,
+                currTime: 0
+            });
+            RNAudioStreamer.play();
+        }
         MusicControl.setNowPlaying({
             title: segment.title,
             artwork: segment.image,
@@ -177,6 +184,10 @@ export default class Player extends React.Component {
         if (this.state.status === 'PLAYING') {
             RNAudioStreamer.pause();
         } else if (this.state.status === 'PAUSED') {
+            RNAudioStreamer.play();
+        } else if (this.state.status === 'STANDBY') {
+            this.playSegment(this.savedSagment, false);
+            RNAudioStreamer.seekToTime(this.savedSagment.currTime);
             RNAudioStreamer.play();
         }
     }
