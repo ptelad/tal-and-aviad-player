@@ -22,6 +22,7 @@ public class MyPackages implements ReactPackage {
         List<NativeModule> modules = new ArrayList<>();
 
         modules.add(new HeadsetReceiver(reactContext));
+        modules.add(new AudioFocusManager(reactContext));
 
         return modules;
     }

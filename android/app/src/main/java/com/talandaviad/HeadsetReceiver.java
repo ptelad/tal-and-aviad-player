@@ -28,13 +28,6 @@ public class HeadsetReceiver extends ReactContextBaseJavaModule {
         return "HeadsetReceiver";
     }
 
-    private void sendEvent(ReactContext reactContext,
-                           String eventName,
-                           @Nullable WritableMap params) {
-        reactContext
-                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit(eventName, params);
-    }
 
     @Override
     public void initialize() {
@@ -54,7 +47,7 @@ public class HeadsetReceiver extends ReactContextBaseJavaModule {
                     data.putBoolean("isPlugged", (intent.getIntExtra("state", 0) == 1));
                     data.putBoolean("hasMic", (intent.getIntExtra("microphone", 0) == 1));
                     data.putString("deviceName", deviceName);
-                    sendEvent(reactContext, "WiredHeadset", data);
+                    Utils.sendEvent(reactContext, "WiredHeadset", data);
                 }
             }
         };

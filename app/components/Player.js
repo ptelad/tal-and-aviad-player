@@ -9,12 +9,14 @@ import {
     ActivityIndicator,
     AsyncStorage,
     BackHandler,
-    Alert
+    Alert,
+    NativeModules
 } from 'react-native';
 import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import RNExitApp from 'react-native-exit-app';
+const { AudioFocusManager }  = NativeModules;
 
 const statusMap = {
     PLAYING: MusicControl.STATE_PLAYING,
@@ -42,6 +44,7 @@ export default class Player extends React.Component {
     componentDidMount() {
         DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this));
         DeviceEventEmitter.addListener('WiredHeadset', this._headphonePlugged.bind(this));
+        DeviceEventEmitter.addListener('onAudioFocusChange', this._audioFocusChanged.bind(this));
         BackHandler.addEventListener('hardwareBackPress', this._backPressed.bind(this));
         MusicControl.enableControl('play', true);
         MusicControl.enableControl('pause', true);
@@ -113,6 +116,15 @@ export default class Player extends React.Component {
         }
     }
 
+    _audioFocusChanged(data) {
+        console.log('_audioFocusChanged: ', data);
+        if (this.state.status === 'PLAYING' && !data.inFocus) {
+            RNAudioStreamer.pause();
+        } else if (this.state.status === 'PAUSED' && data.inFocus) {
+            RNAudioStreamer.play();
+        }
+    }
+
     _audioStatus(status) {
         console.log(status);
         this.setState({status});
@@ -144,6 +156,7 @@ export default class Player extends React.Component {
             artwork: segment.image,
             color: 0xE91E63
         });
+        AudioFocusManager.startListening();
         this.timeInterval = setInterval(() => {
             RNAudioStreamer.currentTime((err, currentTime) => {
                 if (err) {
