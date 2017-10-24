@@ -204,13 +204,14 @@ export default class Player extends React.Component {
 
     _seekingComplete(value) {
         this.seeking = false;
-        RNAudioStreamer.seekToTime(value);
+        this.segment && RNAudioStreamer.seekToTime(value);
     }
 
     _seek(value) {
         value = Math.floor(value);
         this.seeking = true;
         this.setState({currTime: value});
+        this.savedSagment && (this.savedSagment.currTime = value);
     }
 
     render() {
