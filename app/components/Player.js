@@ -39,9 +39,11 @@ export default class Player extends React.Component {
 
     constructor(props) {
         super(props);
+        console.log('in ctor!!!');
     }
 
     componentDidMount() {
+        console.log('in componentDidMount');
         DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this));
         DeviceEventEmitter.addListener('WiredHeadset', this._headphonePlugged.bind(this));
         DeviceEventEmitter.addListener('onAudioFocusChange', this._audioFocusChanged.bind(this));
@@ -63,6 +65,7 @@ export default class Player extends React.Component {
     }
 
     componentWillUnmount() {
+        console.log('in componentWillUnmount');
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
@@ -70,6 +73,7 @@ export default class Player extends React.Component {
 
     async _saveStateAndExit() {
         if (this.segment) {
+            await this._getCurrentTime();
             RNAudioStreamer.setUrl('');
             await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
             MusicControl.resetNowPlaying();
@@ -166,7 +170,11 @@ export default class Player extends React.Component {
             color: 0xE91E63
         });
         AudioFocusManager.startListening();
-        this.timeInterval = setInterval(() => {
+        this.timeInterval = setInterval(this._getCurrentTime.bind(this), 1000);
+    }
+
+    async _getCurrentTime() {
+        return new Promise(resolve => {
             RNAudioStreamer.currentTime((err, currentTime) => {
                 if (err) {
                     console.log(err);
@@ -176,8 +184,9 @@ export default class Player extends React.Component {
                         this.setState({currTime: currentTime});
                     }
                 }
+                resolve();
             })
-        }, 1000);
+        })
     }
 
     _playPausePressed() {
