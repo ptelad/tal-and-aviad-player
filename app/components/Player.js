@@ -145,6 +145,13 @@ export default class Player extends React.Component {
                 this.setState({duration});
                 this.segment.duration = duration;
             })
+        } else if (status === 'FINISHED') {
+            clearInterval(this.timeInterval);
+            this.timeInterval = null;
+            this.segment = null;
+            AsyncStorage.removeItem('saved');
+            MusicControl.resetNowPlaying();
+            this.setState(defaultState);
         }
         MusicControl.updatePlayback({
             state: statusMap[status]
