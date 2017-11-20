@@ -50,6 +50,8 @@ export default class Player extends React.Component {
         BackHandler.addEventListener('hardwareBackPress', this._backPressed.bind(this));
         MusicControl.enableControl('play', true);
         MusicControl.enableControl('pause', true);
+        MusicControl.enableControl('skipForward', true, {interval: 5});
+        MusicControl.enableControl('skipBackward', true, {interval: 5});
         MusicControl.enableBackgroundMode(true);
         MusicControl.enableControl('closeNotification', true, {when: 'always'});
         MusicControl.on('play', ()=> {
@@ -60,6 +62,16 @@ export default class Player extends React.Component {
         });
         MusicControl.on('closeNotification', async ()=> {
             await this._saveStateAndExit();
+        });
+        MusicControl.on('skipForward', ()=> {
+            let seek = Math.min(this.state.currTime + 5, this.state.duration);
+            RNAudioStreamer.seekToTime(seek);
+            this.setState({currTime: seek});
+        });
+        MusicControl.on('skipBackward', ()=> {
+            let seek = Math.max(this.state.currTime - 5, 0);
+            RNAudioStreamer.seekToTime(seek);
+            this.setState({currTime: seek});
         });
         this._checkSavedStateAndLoad();
     }
