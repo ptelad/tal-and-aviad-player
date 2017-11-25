@@ -16,6 +16,7 @@ import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import RNExitApp from 'react-native-exit-app';
+import AsyncLock from 'async-lock';
 const { AudioFocusManager }  = NativeModules;
 
 const statusMap = {
@@ -32,7 +33,7 @@ const defaultState = {
 };
 
 const PINK = '#E91E63';
-
+const lock = new AsyncLock();
 
 export default class Player extends React.Component {
     state = defaultState;
@@ -64,14 +65,28 @@ export default class Player extends React.Component {
             await this._saveStateAndExit();
         });
         MusicControl.on('nextTrack', ()=> {
-            let seek = Math.min(this.state.currTime + 5, this.state.duration);
-            RNAudioStreamer.seekToTime(seek);
-            this.setState({currTime: seek});
+            lock.acquire('seek', done => {
+                RNAudioStreamer.currentTime((err, currentTime) => {
+                    if (!err) {
+                        let seek = Math.min(currentTime + 5, this.state.duration);
+                        RNAudioStreamer.seekToTime(seek);
+                        this.setState({currTime: seek});
+                    }
+                    done();
+                });
+            });
         });
         MusicControl.on('previousTrack', ()=> {
-            let seek = Math.max(this.state.currTime - 5, 0);
-            RNAudioStreamer.seekToTime(seek);
-            this.setState({currTime: seek});
+            lock.acquire('seek', done => {
+                RNAudioStreamer.currentTime((err, currentTime) => {
+                    if (!err) {
+                        let seek = Math.max(currentTime - 5, 0);
+                        RNAudioStreamer.seekToTime(seek);
+                        this.setState({currTime: seek});
+                    }
+                    done();
+                });
+            });
         });
         this._checkSavedStateAndLoad();
     }
@@ -164,6 +179,15 @@ export default class Player extends React.Component {
             AsyncStorage.removeItem('saved');
             MusicControl.resetNowPlaying();
             this.setState(defaultState);
+        } else if (status === 'ERROR') {
+            lock.
+            RNAudioStreamer.currentTime((err, currentTime) => {
+                if (!err) {
+                    RNAudioStreamer.setUrl(this.segment.url);
+                    RNAudioStreamer.seekToTime(currentTime);
+                    RNAudioStreamer.play();
+                }
+            });
         }
         MusicControl.updatePlayback({
             state: statusMap[status]
@@ -201,6 +225,9 @@ export default class Player extends React.Component {
                     this.segment.currTime = currentTime;
                     if (!this.seeking) {
                         this.setState({currTime: currentTime});
+                        MusicControl.updatePlayback({
+                            elapsedTime: currentTime
+                        });
                     }
                 }
                 resolve();
@@ -262,7 +289,7 @@ export default class Player extends React.Component {
                             maximumTrackTintColor={PINK}
                             thumbTintColor={PINK}
                         />
-                        <Text>{secondsToTime(this.state.duration)}</Text>
+                        <Text>-{secondsToTime(this.state.duration - this.state.currTime)}</Text>
                     </View>
                 </View>
             </View>
