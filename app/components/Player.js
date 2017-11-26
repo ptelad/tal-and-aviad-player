@@ -165,13 +165,23 @@ export default class Player extends React.Component {
 
     _audioStatus(status) {
         console.log(status);
-        this.setState({status});
         if (status === 'PLAYING') {
-            RNAudioStreamer.duration((err, duration) => {
-                console.log(duration);
-                this.setState({duration});
-                this.segment.duration = duration;
-            })
+            if (!this.state.duration) {
+                RNAudioStreamer.duration((err, duration) => {
+                    console.log(duration);
+                    this.setState({duration});
+                    this.segment.duration = duration;
+                })
+            }
+            if (this.state.status !== 'BUFFERING') {
+                MusicControl.updatePlayback({
+                    state: MusicControl.STATE_PLAYING
+                });
+            }
+        } else if (status === 'PAUSED') {
+            MusicControl.updatePlayback({
+                state: MusicControl.STATE_PAUSED
+            });
         } else if (status === 'FINISHED') {
             clearInterval(this.timeInterval);
             this.timeInterval = null;
@@ -180,7 +190,6 @@ export default class Player extends React.Component {
             MusicControl.resetNowPlaying();
             this.setState(defaultState);
         } else if (status === 'ERROR') {
-            lock.
             RNAudioStreamer.currentTime((err, currentTime) => {
                 if (!err) {
                     RNAudioStreamer.setUrl(this.segment.url);
@@ -189,9 +198,7 @@ export default class Player extends React.Component {
                 }
             });
         }
-        MusicControl.updatePlayback({
-            state: statusMap[status]
-        });
+        this.setState({status});
     }
 
     playSegment(segment, play = true) {
