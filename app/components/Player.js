@@ -205,11 +205,11 @@ export default class Player extends React.Component {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
-        this.setState(defaultState);
         this.segment = segment;
         RNAudioStreamer.setUrl(segment.url);
         if (play) {
             this.setState({
+                ...defaultState,
                 nowPlaying: segment.title,
                 currTime: 0
             });
