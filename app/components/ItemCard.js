@@ -32,7 +32,7 @@ export default class ItemCard extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
-        height: 270,
+        height: 300,
         margin: 20,
         // borderWidth: 1,
         borderRadius: 2,
@@ -40,13 +40,13 @@ const styles = StyleSheet.create({
         backgroundColor: 'white'
     },
     image: {
-        flex: 0.7,
-        resizeMode: 'cover',
+        flex: 1,
+        resizeMode: 'contain',
         borderTopLeftRadius: 2,
         borderTopRightRadius: 2
     },
     textContainer: {
-        flex: 0.3,
+        height: 80,
         paddingHorizontal: 20,
         alignItems: 'center',
         justifyContent: 'center'
