@@ -218,7 +218,8 @@ export default class Player extends React.Component {
         MusicControl.setNowPlaying({
             title: segment.title,
             artwork: segment.image,
-            color: 0xE91E63
+            color: 0xE91E63,
+            notificationIcon: 'ic_radio'
         });
         AudioFocusManager.startListening();
         this.timeInterval = setInterval(this._getCurrentTime.bind(this), 1000);
