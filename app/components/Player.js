@@ -17,7 +17,7 @@ import MusicControl from 'react-native-music-control';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import AsyncLock from 'async-lock';
 import Wakeful from 'react-native-wakeful';
-const { AudioFocusManager }  = NativeModules;
+const { AudioFocusManager, ExitApp }  = NativeModules;
 
 const wakeful = new Wakeful();
 
@@ -114,7 +114,7 @@ export default class Player extends React.Component {
             MusicControl.resetNowPlaying();
         }
         wakeful.release();
-        BackHandler.exitApp();
+        ExitApp.finish();
     }
 
     _backPressed() {

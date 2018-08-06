@@ -23,6 +23,7 @@ public class MyPackages implements ReactPackage {
 
         modules.add(new HeadsetReceiver(reactContext));
         modules.add(new AudioFocusManager(reactContext));
+        modules.add(new ExitApp(reactContext));
 
         return modules;
     }
