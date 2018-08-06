@@ -15,9 +15,11 @@ import {
 import RNAudioStreamer from 'react-native-audio-streamer';
 import MusicControl from 'react-native-music-control';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
-import RNExitApp from 'react-native-exit-app';
 import AsyncLock from 'async-lock';
+import Wakeful from 'react-native-wakeful';
 const { AudioFocusManager }  = NativeModules;
+
+const wakeful = new Wakeful();
 
 const statusMap = {
     PLAYING: MusicControl.STATE_PLAYING,
@@ -48,7 +50,7 @@ export default class Player extends React.Component {
         DeviceEventEmitter.addListener('RNAudioStreamerStatusChanged', this._audioStatus.bind(this));
         DeviceEventEmitter.addListener('WiredHeadset', this._headphonePlugged.bind(this));
         DeviceEventEmitter.addListener('onAudioFocusChange', this._audioFocusChanged.bind(this));
-        BackHandler.addEventListener('hardwareBackPress', this._backPressed.bind(this));
+        this.backSub = BackHandler.addEventListener('hardwareBackPress', this._backPressed.bind(this));
         MusicControl.enableControl('play', true);
         MusicControl.enableControl('pause', true);
         MusicControl.enableControl('nextTrack', true);
@@ -93,6 +95,12 @@ export default class Player extends React.Component {
 
     componentWillUnmount() {
         console.log('in componentWillUnmount');
+        DeviceEventEmitter.removeAllListeners('RNAudioStreamerStatusChanged');
+        DeviceEventEmitter.removeAllListeners('WiredHeadset');
+        DeviceEventEmitter.removeAllListeners('onAudioFocusChange');
+        this.backSub && this.backSub.remove();
+        this.backSub = null;
+        wakeful.release();
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
@@ -101,11 +109,12 @@ export default class Player extends React.Component {
     async _saveStateAndExit() {
         if (this.segment) {
             await this._getCurrentTime();
-            RNAudioStreamer.setUrl('');
+            RNAudioStreamer.stop();
             await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
             MusicControl.resetNowPlaying();
         }
-        RNExitApp.exitApp();
+        wakeful.release();
+        BackHandler.exitApp();
     }
 
     _backPressed() {
@@ -189,6 +198,7 @@ export default class Player extends React.Component {
             AsyncStorage.removeItem('saved');
             MusicControl.resetNowPlaying();
             this.setState(defaultState);
+            wakeful.release();
         } else if (status === 'ERROR') {
             RNAudioStreamer.currentTime((err, currentTime) => {
                 if (!err) {
@@ -223,6 +233,7 @@ export default class Player extends React.Component {
         });
         AudioFocusManager.startListening();
         this.timeInterval = setInterval(this._getCurrentTime.bind(this), 1000);
+        wakeful.acquire();
     }
 
     async _getCurrentTime() {
