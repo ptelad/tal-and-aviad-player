@@ -33,12 +33,13 @@ public class HeadsetReceiver extends ReactContextBaseJavaModule {
     public void initialize() {
         super.initialize();
 
-        final ReactContext reactContext = getReactApplicationContext();
+        ReactContext reactContext = getReactApplicationContext();
         IntentFilter filter = new IntentFilter(ACTION_HEADSET_PLUG);
         BroadcastReceiver wiredHeadsetReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (ACTION_HEADSET_PLUG.equals(intent.getAction())) {
+                    ReactContext reactContext = getReactApplicationContext();
                     String deviceName = intent.getStringExtra("name");
                     if (deviceName == null) {
                         deviceName = "";

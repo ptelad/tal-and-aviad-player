@@ -106,11 +106,17 @@ export default class Player extends React.Component {
         }
     }
 
-    async _saveStateAndExit() {
+    async _saveState() {
         if (this.segment) {
             await this._getCurrentTime();
-            RNAudioStreamer.stop();
             await AsyncStorage.setItem('saved', JSON.stringify(this.segment));
+        }
+    }
+
+    async _saveStateAndExit() {
+        if (this.segment) {
+            await this._saveState();
+            RNAudioStreamer.stop();
             MusicControl.resetNowPlaying();
         }
         wakeful.release();
@@ -156,8 +162,11 @@ export default class Player extends React.Component {
     }
 
     _headphonePlugged(data) {
-        if (this.state.status === 'PLAYING' && !data.isPlugged) {
-            RNAudioStreamer.pause();
+        if (!data.isPlugged) {
+            if (this.state.status === 'PLAYING') {
+                RNAudioStreamer.pause();
+            }
+            this._saveState();
         }
     }
 
