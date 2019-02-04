@@ -219,9 +219,11 @@ export default class Player extends React.Component {
         } else if (status === 'ERROR') {
             RNAudioStreamer.currentTime((err, currentTime) => {
                 if (!err) {
-                    RNAudioStreamer.setUrl(this.segment.url);
-                    RNAudioStreamer.seekToTime(currentTime);
-                    RNAudioStreamer.play();
+                    setTimeout(() => {
+                        RNAudioStreamer.setUrl(this.segment.url);
+                        RNAudioStreamer.seekToTime(currentTime);
+                        RNAudioStreamer.play();
+                    }, 1000);
                 }
             });
         }
