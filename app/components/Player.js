@@ -67,28 +67,10 @@ export default class Player extends React.Component {
             await this._saveStateAndExit();
         });
         MusicControl.on('nextTrack', ()=> {
-            lock.acquire('seek', done => {
-                RNAudioStreamer.currentTime((err, currentTime) => {
-                    if (!err) {
-                        let seek = Math.min(currentTime + 5, this.state.duration);
-                        RNAudioStreamer.seekToTime(seek);
-                        this.setState({currTime: seek});
-                    }
-                    done();
-                });
-            });
+            this._jumpForward();
         });
         MusicControl.on('previousTrack', ()=> {
-            lock.acquire('seek', done => {
-                RNAudioStreamer.currentTime((err, currentTime) => {
-                    if (!err) {
-                        let seek = Math.max(currentTime - 5, 0);
-                        RNAudioStreamer.seekToTime(seek);
-                        this.setState({currTime: seek});
-                    }
-                    done();
-                });
-            });
+            this._jumpBackwards();
         });
         this._checkSavedStateAndLoad();
     }
@@ -121,6 +103,32 @@ export default class Player extends React.Component {
         }
         wakeful.release();
         ExitApp.finish();
+    }
+
+    _jumpForward() {
+        lock.acquire('seek', done => {
+            RNAudioStreamer.currentTime((err, currentTime) => {
+                if (!err) {
+                    let seek = Math.min(currentTime + 10, this.state.duration);
+                    RNAudioStreamer.seekToTime(seek);
+                    this.setState({currTime: seek});
+                }
+                done();
+            });
+        });
+    }
+
+    _jumpBackwards() {
+        lock.acquire('seek', done => {
+            RNAudioStreamer.currentTime((err, currentTime) => {
+                if (!err) {
+                    let seek = Math.max(currentTime - 10, 0);
+                    RNAudioStreamer.seekToTime(seek);
+                    this.setState({currTime: seek});
+                }
+                done();
+            });
+        });
     }
 
     _backPressed() {
@@ -306,6 +314,9 @@ export default class Player extends React.Component {
                     <TouchableOpacity style={styles.playButton} onPress={this._playPausePressed.bind(this)}>
                         {icon}
                     </TouchableOpacity>
+                    <TouchableOpacity style={styles.playButton} onPress={this._jumpBackwards.bind(this)}>
+                        <Icon name="rewind" size={30} color={PINK}/>
+                    </TouchableOpacity>
                     <View style={styles.slider}>
                         <Text>{secondsToTime(this.state.currTime)}</Text>
                         <Slider
@@ -319,6 +330,9 @@ export default class Player extends React.Component {
                             thumbTintColor={PINK}
                         />
                         <Text>-{secondsToTime(this.state.duration - this.state.currTime)}</Text>
+                        <TouchableOpacity style={styles.playButton} onPress={this._jumpForward.bind(this)}>
+                            <Icon name="fast-forward" size={30} color={PINK}/>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
