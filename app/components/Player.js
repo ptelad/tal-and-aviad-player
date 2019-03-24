@@ -58,7 +58,7 @@ export default class Player extends React.Component {
         MusicControl.enableBackgroundMode(true);
         MusicControl.enableControl('closeNotification', true, {when: 'always'});
         MusicControl.on('play', ()=> {
-            RNAudioStreamer.play();
+            this._playPausePressed();
         });
         MusicControl.on('pause', ()=> {
             RNAudioStreamer.pause();
@@ -204,7 +204,7 @@ export default class Player extends React.Component {
                     state: MusicControl.STATE_PLAYING
                 });
             }
-        } else if (status === 'PAUSED') {
+        } else if (status === 'PAUSED' || status === 'ERROR') {
             MusicControl.updatePlayback({
                 state: MusicControl.STATE_PAUSED
             });
@@ -216,16 +216,6 @@ export default class Player extends React.Component {
             MusicControl.resetNowPlaying();
             this.setState(defaultState);
             wakeful.release();
-        } else if (status === 'ERROR') {
-            RNAudioStreamer.currentTime((err, currentTime) => {
-                if (!err) {
-                    setTimeout(() => {
-                        RNAudioStreamer.setUrl(this.segment.url);
-                        RNAudioStreamer.seekToTime(currentTime);
-                        RNAudioStreamer.play();
-                    }, 1000);
-                }
-            });
         }
         this.setState({status});
     }
@@ -284,6 +274,14 @@ export default class Player extends React.Component {
             RNAudioStreamer.seekToTime(this.savedSagment.currTime);
             RNAudioStreamer.play();
             this.savedSagment = null;
+        } else if (this.state.status === 'ERROR') {
+            RNAudioStreamer.currentTime((err, currentTime) => {
+                if (!err) {
+                    RNAudioStreamer.setUrl(this.segment.url);
+                    RNAudioStreamer.seekToTime(currentTime);
+                    RNAudioStreamer.play();
+                }
+            });
         }
     }
 
@@ -303,7 +301,7 @@ export default class Player extends React.Component {
         let icon = null;
         if (this.state.status === 'PLAYING') {
             icon = <Icon name="pause" size={30} color={PINK}/>;
-        } else if (this.state.status === 'PAUSED' || this.state.status === "STANDBY") {
+        } else if (this.state.status === 'PAUSED' || this.state.status === 'STANDBY' || this.state.status === 'ERROR') {
             icon = <Icon name="play" size={30} color={PINK}/>;
         } else if (this.state.status === 'BUFFERING') {
             icon = <ActivityIndicator color={PINK}/>

@@ -43,7 +43,7 @@ export default class TalAndAviad extends React.Component {
         return <ItemCard
             image={item.RecordedProgramsImg[0]}
             title={item.RecordedProgramsName[0]}
-            url={/(.*\.mp3)/.exec(item.RecordedProgramsFile[0])[1]}
+            url={/(.*\.mp3)/.exec(item.RecordedProgramsDownloadFile[0])[1]}
             onPress={this._playItem.bind(this)}
         />
     }
