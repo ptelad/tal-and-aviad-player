@@ -204,7 +204,7 @@ export default class Player extends React.Component {
                     state: MusicControl.STATE_PLAYING
                 });
             }
-        } else if (status === 'PAUSED' || status === 'ERROR') {
+        } else if (status === 'PAUSED') {
             MusicControl.updatePlayback({
                 state: MusicControl.STATE_PAUSED
             });
@@ -216,8 +216,15 @@ export default class Player extends React.Component {
             MusicControl.resetNowPlaying();
             this.setState(defaultState);
             wakeful.release();
+        } else if (status === 'STOPPED' && this.state.status !== 'STOPPED') {
+            RNAudioStreamer.setUrl(this.segment.url);
+            RNAudioStreamer.seekToTime(this.state.currTime);
+            RNAudioStreamer.play();
         }
-        this.setState({status});
+
+        if (status !== 'ERROR') {
+            this.setState({status});
+        }
     }
 
     playSegment(segment, play = true) {
@@ -301,7 +308,7 @@ export default class Player extends React.Component {
         let icon = null;
         if (this.state.status === 'PLAYING') {
             icon = <Icon name="pause" size={30} color={PINK}/>;
-        } else if (this.state.status === 'PAUSED' || this.state.status === 'STANDBY' || this.state.status === 'ERROR') {
+        } else if (this.state.status === 'PAUSED' || this.state.status === 'STANDBY') {
             icon = <Icon name="play" size={30} color={PINK}/>;
         } else if (this.state.status === 'BUFFERING') {
             icon = <ActivityIndicator color={PINK}/>
