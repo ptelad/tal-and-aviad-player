@@ -42,6 +42,7 @@ export default class Player extends React.Component {
 
     constructor(props) {
         super(props);
+        this.wasError = false;
         console.log('in ctor!!!');
     }
 
@@ -216,10 +217,14 @@ export default class Player extends React.Component {
             MusicControl.resetNowPlaying();
             this.setState(defaultState);
             wakeful.release();
-        } else if (status === 'STOPPED' && this.state.status !== 'STOPPED') {
+        } else if (status === 'ERROR') {
+            this.wasError = true;
+        } else if (status === 'STOPPED' && this.wasError) {
+            console.log('IN STOPPED!');
             RNAudioStreamer.setUrl(this.segment.url);
             RNAudioStreamer.seekToTime(this.state.currTime);
             RNAudioStreamer.play();
+            this.wasError = false;
         }
 
         if (status !== 'ERROR') {
@@ -231,6 +236,7 @@ export default class Player extends React.Component {
         if (this.timeInterval) {
             clearInterval(this.timeInterval);
         }
+        this.wasError = false;
         this.segment = segment;
         RNAudioStreamer.setUrl(segment.url);
         if (play) {
